@@ -10,6 +10,4 @@ public class FoyerApplication {
         SpringApplication.run(FoyerApplication.class, args);
     }
 
-    // test
-
 }
