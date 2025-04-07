@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  nexus:
+    image: sonatype/nexus3:3.44.0
+    ports:
+      - "8081:8081"
+    volumes:
+      - nexus-data:/nexus-data
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=M1064
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+  # Service MySQL pour SonarQube (et pour votre application si besoin)
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=sonar
+      - MYSQL_USER=sonar
+      - MYSQL_PASSWORD=sonar
+      - MYSQL_ROOT_PASSWORD=sonar
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+
+
+  sonarqube:
+    image: sonarqube:community
+    ports:
+      - "9000:9000"
+    environment:
+      # Utilisation de MySQL pour SonarQube (vérifiez la compatibilité de votre version)
+      - SONAR_JDBC_URL=jdbc:mysql://db:3306/sonar?useSSL=false&serverTimezone=UTC
+      - SONAR_JDBC_USERNAME=admin
+      - SONAR_JDBC_PASSWORD=HAMA11midou@
+    depends_on:
+      - db
+
+volumes:
+  nexus-data:
+  grafana-storage:
+  mysql-data:
