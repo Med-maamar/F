@@ -29,11 +29,6 @@ public class BlocServiceTest {
     @Mock
     private ChambreRepository chambreRepository;
 
-    // Si nécessaire, vous pouvez vous appuyer sur un second mock du même type
-    // si votre code l'exige vraiment.
-    @Mock
-    private BlocRepository blocRepository;
-
     @Mock
     private FoyerRepository foyerRepository;
 
