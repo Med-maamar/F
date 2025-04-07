@@ -1,17 +1,15 @@
-# Utiliser une image de base OpenJDK 17 sur Alpine Linux
-FROM openjdk:17-jdk-alpine
+# Étape 1 : Compilation de l'application
+FROM maven:3.9.2-eclipse-temurin-17 as builder
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Créer un volume pour stocker des fichiers temporaires
+# Étape 2 : Création de l'image finale
+FROM --platform=linux/amd64 openjdk:17-jdk-alpine
 VOLUME /tmp
-
-# Argument pour le fichier JAR généré par Maven (assurez-vous que le nom correspond)
-ARG JAR_FILE=target/Foyer-1.5.0-SNAPSHOT.jar
-
-# Copier le fichier JAR dans l’image
-COPY ${JAR_FILE} app.jar
-
-# Exposer le port 8080 (modifiez si nécessaire)
-EXPOSE 8080
-
-# Commande d’exécution de l’application
+ARG JAR_FILE=/app/target/Foyer-1.5.0-SNAPSHOT.jar
+COPY --from=builder ${JAR_FILE} app.jar
+EXPOSE 8086
 ENTRYPOINT ["java", "-jar", "/app.jar"]
