@@ -54,12 +54,16 @@ public class BlocServiceTest {
         // Simuler le comportement du repo pour l'ajout ou la mise à jour
         when(repo.save(any(Bloc.class))).thenReturn(bloc);
         // Pour la sauvegarde des chambres, on renvoie simplement l'objet passé
-        when(chambreRepository.save(any(Chambre.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(chambreRepository.save(any(Chambre.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
+        // Appeler la méthode du service pour ajouter ou mettre à jour le bloc
         Bloc result = blocService.addOrUpdate(bloc);
 
+        // Vérifier que le résultat n'est pas null et que les propriétés sont correctes
         assertNotNull(result, "Le bloc ne doit pas être null");
         assertEquals("Bloc A", result.getNomBloc(), "Le nom du bloc doit être 'Bloc A'");
+
         // Vérifier que chaque chambre a bien été sauvegardée
         verify(chambreRepository, times(chambres.size())).save(any(Chambre.class));
         verify(repo, times(1)).save(any(Bloc.class));
