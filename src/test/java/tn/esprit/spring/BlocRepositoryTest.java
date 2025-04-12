@@ -61,4 +61,6 @@ public class BlocRepositoryTest {
         assertThat(found).isNotNull();
         assertThat(found.getNomBloc()).isEqualTo("JPQLBloc");
     }
+
+
 }
