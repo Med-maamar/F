@@ -1,59 +1,80 @@
-version: '3.8'
-
 services:
+  db:
+    image: mysql:8.0
+    container_name: db-bloc
+    environment:
+      MYSQL_DATABASE: bloc
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+    ports:
+      - "3310:3306"
+    volumes:
+      - db-storage:/var/lib/mysql
+    networks:
+      - bloc-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost"]
+      interval: 12s
+      retries: 5
+
+  api-service:
+    image: bloc-api:latest  # ✅ corrigé ici
+    container_name: bloc-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/bloc?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ''
+    ports:
+      - "9090:8086"
+    networks:
+      - bloc-net
+
   nexus:
-    image: sonatype/nexus3:3.44.0
+    image: sonatype/nexus3
+    container_name: nexus
     ports:
       - "8081:8081"
     volumes:
       - nexus-data:/nexus-data
-
-  prometheus:
-    image: prom/prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-
-  grafana:
-    image: grafana/grafana
-    ports:
-      - "3000:3000"
+    networks:
+      - bloc-net
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=M1064
-    volumes:
-      - grafana-storage:/var/lib/grafana
-
-  # Service MySQL pour SonarQube (et pour votre application si besoin)
-  db:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_DATABASE=sonar
-      - MYSQL_USER=sonar
-      - MYSQL_PASSWORD=sonar
-      - MYSQL_ROOT_PASSWORD=sonar
-    volumes:
-      - mysql-data:/var/lib/mysql
-
-
+      - INSTALL4J_ADD_VM_PARAMS=-Xms512m -Xmx1024m -XX:MaxDirectMemorySize=2G
 
   sonarqube:
     image: sonarqube:community
+    container_name: sonarqube
     ports:
       - "9000:9000"
     environment:
-      # Utilisation de MySQL pour SonarQube (vérifiez la compatibilité de votre version)
-      - SONAR_JDBC_URL=jdbc:mysql://db:3306/sonar?useSSL=false&serverTimezone=UTC
-      - SONAR_JDBC_USERNAME=admin
-      - SONAR_JDBC_PASSWORD=HAMA11midou@
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+      - SONAR_JDBC_URL=jdbc:postgresql://sonar-db:5432/sonar
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
     depends_on:
-      - db
+      - sonar-db
+    networks:
+      - bloc-net
+
+  sonar-db:
+    image: postgres:13
+    container_name: sonar-db
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonar
+    volumes:
+      - sonar-db-data:/var/lib/postgresql/data
+    networks:
+      - bloc-net
+
+networks:
+  bloc-net:
+    driver: bridge
 
 volumes:
+  db-storage:
   nexus-data:
-  grafana-storage:
-  mysql-data:
+  sonar-db-data:
