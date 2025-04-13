@@ -12,7 +12,7 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
-ARG JAR_FILE=target/Foyer-1.5.0-SNAPSHOT.jar
+ARG JAR_FILE=target/Foyer-1.8.0-SNAPSHOT.jar
 COPY --from=builder /app/${JAR_FILE} app.jar
 
 EXPOSE 8086
